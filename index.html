@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Монитор тендеров — открытые закупки Беларуси</title>
+<meta name="description" content="Поиск открытых государственных и корпоративных закупок Беларуси с площадки icetrade.by: ключевые слова, фильтры по области, отрасли, цене и сроку, обзор рынка и динамика спроса.">
+<meta property="og:title" content="Монитор тендеров">
+<meta property="og:description" content="Найдите закупки для своего бизнеса: все открытые тендеры icetrade.by в одном поиске.">
+<meta name="theme-color" content="#1D6A4C">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%223%22 y=%225%22 width=%2220%22 height=%2224%22 rx=%223%22 fill=%22%23E2EEE7%22 stroke=%22%231D6A4C%22 stroke-width=%222%22/%3E%3Ccircle cx=%2224%22 cy=%2210%22 r=%226%22 fill=%22%23fff%22 stroke=%22%231D6A4C%22 stroke-width=%222%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="brand" href="#poisk" data-view-link="poisk" aria-label="Монитор тендеров — на главную">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="5" width="20" height="24" rx="3"></rect><path d="M8 12h10M8 17h10M8 22h6"></path><circle cx="24" cy="10" r="6"></circle><path d="M24 7v3.4l2.2 1.4"></path></svg>
+      <span>Монитор тендеров</span>
+    </a>
+    <nav class="nav" aria-label="Разделы">
+      <a href="#poisk" data-view-link="poisk">Поиск закупок</a>
+      <a href="#rynok" data-view-link="rynok">Обзор рынка</a>
+      <a href="#dinamika" data-view-link="dinamika">Динамика</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ ПОИСК ============ -->
+  <section class="view" id="view-poisk" aria-labelledby="h-poisk">
+    <div class="wrap">
+      <div class="intro">
+        <h1 id="h-poisk">Найдите закупки для своего бизнеса</h1>
+        <p class="intro-text" id="intro-text">Загружаем открытые закупки…</p>
+      </div>
+
+      <div class="finder" role="search">
+        <label class="sr" for="q">Что вы поставляете или какие работы выполняете</label>
+        <div class="searchbox">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21"></path></svg>
+          <input id="q" type="search" autocomplete="off" placeholder="Что вы поставляете? Например: кровля, шины, аудит" enterkeyhint="search">
+          <button type="button" class="clear-q" id="clear-q" aria-label="Очистить поиск" hidden>×</button>
+        </div>
+        <div class="chips" id="chips" aria-label="Часто ищут"></div>
+
+        <div class="filters">
+          <div class="field"><label for="f-oblast">Область</label><select id="f-oblast"></select></div>
+          <div class="field"><label for="f-category">Отрасль</label><select id="f-category"></select></div>
+          <div class="field"><label for="f-kind">Тип закупки</label><select id="f-kind"></select></div>
+          <div class="field"><label for="f-price">Начальная цена</label>
+            <select id="f-price">
+              <option value="">Любая</option>
+              <option value="0-10000">до 10 тыс. BYN</option>
+              <option value="10000-50000">10–50 тыс. BYN</option>
+              <option value="50000-200000">50–200 тыс. BYN</option>
+              <option value="200000-1000000">200 тыс. – 1 млн BYN</option>
+              <option value="1000000-">больше 1 млн BYN</option>
+            </select>
+          </div>
+          <div class="field"><label for="f-days">Срок подачи</label>
+            <select id="f-days">
+              <option value="">Любой</option>
+              <option value="3-">Осталось 3 дня и больше</option>
+              <option value="7-">Осталось 7 дней и больше</option>
+              <option value="-2">Закрываются в 2 дня</option>
+            </select>
+          </div>
+          <div class="field"><label for="f-sort">Порядок</label>
+            <select id="f-sort">
+              <option value="urgent">Сначала срочные</option>
+              <option value="new">Сначала новые</option>
+              <option value="price-desc">Сначала дорогие</option>
+              <option value="price-asc">Сначала недорогие</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-head">
+        <p class="results-count" id="results-count" aria-live="polite"></p>
+        <button type="button" class="link-btn" id="reset" hidden>Сбросить поиск и фильтры</button>
+      </div>
+      <div class="results" id="results"></div>
+      <div class="more"><button type="button" class="btn" id="more" hidden>Показать ещё</button></div>
+    </div>
+  </section>
+
+  <!-- ============ ОБЗОР РЫНКА ============ -->
+  <section class="view" id="view-rynok" aria-labelledby="h-rynok" hidden>
+    <div class="wrap">
+      <div class="intro">
+        <h1 id="h-rynok">Что происходит на рынке закупок</h1>
+        <p class="lead" id="market-lead"></p>
+      </div>
+      <div class="stats" id="market-stats"></div>
+
+      <div class="grid2">
+        <article class="panel">
+          <h2>Товары, работы, услуги</h2>
+          <p class="note">Открытые закупки. Тип определён по коду ОКРБ: товары — разделы 01–32, работы — строительство и ремонт оборудования, услуги — остальное.</p>
+          <div id="mix-kind"></div>
+        </article>
+        <article class="panel">
+          <h2>Где не хватает поставщиков</h2>
+          <p class="note">Доля закупок, которые не состоялись, — обычно из-за того, что предложений было слишком мало. Чем выше доля, тем слабее конкуренция и тем больше шансов у нового поставщика.</p>
+          <div class="bars" id="bars-outcomes"></div>
+        </article>
+      </div>
+      <div class="grid2">
+        <article class="panel">
+          <h2>Что именно покупают</h2>
+          <p class="note">Открытые закупки по разделам классификатора ОКРБ. Нажмите на строку, чтобы увидеть эти закупки.</p>
+          <div class="bars" id="bars-divisions"></div>
+        </article>
+        <article class="panel">
+          <h2>Самые востребованные направления</h2>
+          <p class="note">Подотрасли площадки по числу открытых закупок. Нажмите на строку, чтобы увидеть эти закупки.</p>
+          <div class="bars" id="bars-subcats"></div>
+        </article>
+      </div>
+      <div class="grid2">
+        <article class="panel">
+          <h2>Самые активные заказчики</h2>
+          <p class="note">По числу закупок за последние 60 дней.</p>
+          <div class="table-wrap"><table class="tbl" id="tbl-active"><thead><tr><th>Заказчик</th><th class="r">Закупок</th><th class="r">Открыто</th></tr></thead><tbody></tbody></table></div>
+        </article>
+        <article class="panel">
+          <h2>Крупнейшие открытые закупки</h2>
+          <p class="note">По начальной цене.</p>
+          <div class="table-wrap"><table class="tbl" id="tbl-biggest"><thead><tr><th>Закупка</th><th class="r">Цена, BYN</th><th class="r">Срок</th></tr></thead><tbody></tbody></table></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ДИНАМИКА ============ -->
+  <section class="view" id="view-dinamika" aria-labelledby="h-dinamika" hidden>
+    <div class="wrap">
+      <div class="intro">
+        <h1 id="h-dinamika">Как меняется спрос</h1>
+        <p class="lead" id="trend-lead"></p>
+      </div>
+      <div class="seg" role="group" aria-label="Период">
+        <button type="button" data-grain="month" aria-pressed="true">По месяцам</button>
+        <button type="button" data-grain="quarter" aria-pressed="false">По кварталам</button>
+      </div>
+      <div class="grid2">
+        <article class="panel">
+          <h2>Новых закупок в рабочий день</h2>
+          <p class="note">Среднее по полностью собранным дням. Бледным — периоды, где таких дней меньше 10.</p>
+          <div class="cols" id="rate"></div>
+        </article>
+        <article class="panel">
+          <h2>Состав спроса</h2>
+          <p class="note">Доля товаров, работ и услуг в стоимости закупок.</p>
+          <div id="mix-trend"></div>
+        </article>
+      </div>
+      <article class="panel">
+        <h2>Что растёт и что падает</h2>
+        <p class="note" id="movers-note">Отрасли: закупок в рабочий день, последний период к предыдущему. Только направления, где за два периода набралось 20 закупок и больше.</p>
+        <div class="table-wrap"><table class="tbl" id="tbl-movers"><thead><tr><th>Отрасль</th><th class="r" id="th-prev">Было</th><th class="r" id="th-last">Стало</th><th class="r">Изменение</th><th class="hide-sm"><span class="sr">Шкала</span></th></tr></thead><tbody></tbody></table></div>
+      </article>
+      <article class="panel">
+        <h2>Полнота данных</h2>
+        <p class="note">Серым — сколько закупок площадка опубликовала в рабочий день (оценка по номерам карточек), цветом — сколько попало в монитор. Динамика считается только по полным дням.</p>
+        <div class="coverage" id="coverage"></div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p>Данные площадки <a href="https://icetrade.by" target="_blank" rel="noopener">icetrade.by</a> на <span class="js-date">—</span> Сведения справочные: условия закупки, документы и сроки всегда сверяйте в карточке закупки на площадке.</p>
+    <p>Суммы — начальные (ориентировочные) цены в белорусских рублях; закупки в других валютах в суммы не входят.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>
