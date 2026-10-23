@@ -55,7 +55,7 @@
   }
 
   /* ---------- состояние ---------- */
-  const FILTERS = { q: '', o: '', c: '', k: '', p: '', d: '', s: 'urgent', div: '', sub: '' };
+  const FILTERS = { q: '', o: '', c: '', k: '', src: '', p: '', d: '', s: 'urgent', div: '', sub: '' };
   const state = { ...FILTERS };
   let shown = 30, data = null, summary = null, grain = 'month', today = '';
 
@@ -71,15 +71,20 @@
   }
 
   /* ---------- разделы ---------- */
-  const VIEWS = ['poisk', 'rynok', 'dinamika'];
+  const VIEWS = ['poisk', 'rynok', 'dinamika', 'novichkam', 'zakony'];
+  const VIEW_ID = { novichkam: 'start' };
   function showView(v) {
     if (!VIEWS.includes(v)) v = 'poisk';
-    for (const id of VIEWS) $('#view-' + id).hidden = id !== v;
+    for (const id of VIEWS) $('#view-' + (VIEW_ID[id] || id)).hidden = id !== v;
     $$('.nav [data-view-link]').forEach((a) => { if (a.dataset.viewLink === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     if (v === 'rynok') renderMarket();
     if (v === 'dinamika') renderTrends();
   }
-  window.addEventListener('hashchange', () => { showView(location.hash.slice(1)); window.scrollTo(0, 0); });
+  window.addEventListener('hashchange', () => {
+    const h = location.hash.slice(1);
+    if (/^(law|gz)-/.test(h)) { showView('zakony'); const t = document.getElementById(h); if (t) t.scrollIntoView(); return; }
+    showView(h); window.scrollTo(0, 0);
+  });
 
   /* ---------- загрузка ---------- */
   Promise.all([fetch('data/summary.json').then((r) => r.json()), fetch('data/tenders.json').then((r) => r.json())])
@@ -114,7 +119,7 @@
     intro.replaceChildren(
       'Сейчас принимают заявки ', el('b', null, fmtInt.format(open)), ` ${plural(open, ['закупка', 'закупки', 'закупок'])} на `,
       el('b', null, fmtBig(openSum) + ' BYN'), '. ', el('span', 'hot', fmtInt.format(due3)),
-      ` из них закрываются в ближайшие 3 дня. Данные icetrade.by на ${longDate(summary.report_date)}`);
+      ` из них закрываются в ближайшие 3 дня. Данные icetrade.by и zakupki.butb.by на ${longDate(summary.report_date)}`);
 
     // подсказки
     const chips = $('#chips');
@@ -137,7 +142,7 @@
     fill($('#f-category'), facet('category'), 'Все отрасли');
     fill($('#f-kind'), facet('kind').filter((k) => k.name !== 'Не указано'), 'Все типы');
     const bind = (id, key) => $(id).addEventListener('change', (e) => { state[key] = e.target.value; update(); });
-    bind('#f-oblast', 'o'); bind('#f-category', 'c'); bind('#f-kind', 'k'); bind('#f-price', 'p'); bind('#f-days', 'd'); bind('#f-sort', 's');
+    bind('#f-oblast', 'o'); bind('#f-category', 'c'); bind('#f-kind', 'k'); bind('#f-src', 'src'); bind('#f-price', 'p'); bind('#f-days', 'd'); bind('#f-sort', 's');
     let timer;
     $('#q').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value.trim(); update(); }, 180); });
     $('#clear-q').addEventListener('click', () => { state.q = ''; $('#q').value = ''; update(); $('#q').focus(); });
@@ -148,13 +153,14 @@
     readUrl();
     syncControls();
     update(true);
-    showView(location.hash.slice(1));
-    window.scrollTo(0, 0);
+    const h0 = location.hash.slice(1);
+    if (/^(law|gz)-/.test(h0)) { showView('zakony'); const t = document.getElementById(h0); if (t) setTimeout(() => t.scrollIntoView(), 50); }
+    else { showView(h0); window.scrollTo(0, 0); }
   }
 
   function syncControls() {
     $('#q').value = state.q;
-    for (const [id, k] of [['#f-oblast', 'o'], ['#f-category', 'c'], ['#f-kind', 'k'], ['#f-price', 'p'], ['#f-days', 'd'], ['#f-sort', 's']]) {
+    for (const [id, k] of [['#f-oblast', 'o'], ['#f-category', 'c'], ['#f-kind', 'k'], ['#f-src', 'src'], ['#f-price', 'p'], ['#f-days', 'd'], ['#f-sort', 's']]) {
       const s = $(id); s.value = state[k]; if (s.value !== state[k]) { s.value = ''; state[k] = ''; }
       s.classList.toggle('is-set', !!state[k] && k !== 's');
     }
@@ -177,6 +183,7 @@
       if (state.o && t.oblast !== state.o) return false;
       if (state.c && t.category !== state.c) return false;
       if (state.k && t.kind !== state.k) return false;
+      if (state.src && t.source !== state.src) return false;
       if (state.div && t.division_name !== state.div) return false;
       if (state.sub && t.subcategory !== state.sub) return false;
       if (pMin != null && !(t.currency === 'BYN' && t.price >= pMin)) return false;
@@ -241,15 +248,23 @@
     const body = el('div', 't-body');
     const link = el('a', 't-title');
     const u = safeUrl(t.url);
-    if (u) { link.href = u; link.target = '_blank'; link.rel = 'noopener'; }
+    if (u || /^https:\/\/zakupki\.butb\.by\//.test(t.url)) { link.href = u || t.url; link.target = '_blank'; link.rel = 'noopener'; }
+    if (t.source === 'butb' && !u) link.title = 'Откроется реестр закупок ЭТП БУТБ — найдите закупку по регистрационному номеру';
     link.append(highlight(t.title, regs));
     const who = el('p', 't-who'); who.append(highlight(t.customer, regs));
     const tags = el('div', 't-tags');
     const tag = (text, cls, onClick, title) => { const b = el('button', 'tag ' + (cls || ''), text); b.type = 'button'; b.title = title; b.addEventListener('click', onClick); tags.append(b); };
     if (t.oblast && t.oblast !== 'Не указан') tag(t.oblast, '', () => { state.o = t.oblast; update(); }, 'Показать закупки этой области');
-    if (t.category) tag(t.category, '', () => { state.c = t.category; update(); }, 'Показать закупки этой отрасли');
+    if (t.category && t.category !== 'Отрасль не указана') tag(t.category, '', () => { state.c = t.category; update(); }, 'Показать закупки этой отрасли');
     if (t.kind && t.kind !== 'Не указано') tag(t.kind, 'kind-' + t.kind, () => { state.k = t.kind; update(); }, 'Показать только этот тип');
-    body.append(link, who, tags);
+    const meta = el('div', 't-meta');
+    const butb = t.source === 'butb';
+    meta.append(el('span', 'src src-' + (butb ? 'butb' : 'icetrade'), butb ? 'zakupki.butb.by' : 'icetrade.by'));
+    if (t.procedure) meta.append(el('span', null, t.procedure));
+    if (butb && t.reg_number) meta.append(el('span', null, 'Рег. № ' + t.reg_number));
+    if (t.gias_number) meta.append(el('span', null, 'ГИАС № ' + String(t.gias_number).replace(/\.0$/, '')));
+    if (butb && /госзакуп|бюджет/i.test(t.financing)) tag('госзакупка', 'fin-gov', () => { state.src = 'butb'; update(); }, 'Закупка за счёт бюджета');
+    body.append(link, who, meta, tags);
 
     const price = el('div', 't-price');
     if (t.price != null) price.append(el('b', null, fmtInt.format(Math.round(t.price))), el('span', null, t.currency));
@@ -289,7 +304,7 @@
     const top = m.divisions.slice(0, 3).map((d) => d.name.toLowerCase()).join(', ');
     const worst = m.outcomes[0];
     $('#market-lead').replaceChildren(
-      'Открыто ', el('b', null, fmtInt.format(m.open)), ` закупок на `, el('b', null, fmtBig(m.open_sum) + ' BYN'),
+      `На ${longDate(summary.report_date)} было открыто `, el('b', null, fmtInt.format(m.open)), ` закупок на `, el('b', null, fmtBig(m.open_sum) + ' BYN'),
       ` от ${fmtInt.format(m.customers)} заказчиков. Товары — ${pct(km['Товары']?.n_share)} закупок и ${pct(km['Товары']?.sum_share)} стоимости, работы — ${pct(km['Работы']?.n_share)} и ${pct(km['Работы']?.sum_share)}, услуги — ${pct(km['Услуги']?.n_share)} и ${pct(km['Услуги']?.sum_share)}. Больше всего закупают: ${top}.`
       + (worst ? ` Не состоялась ${pct(m.fail_rate)} закупок с известным исходом; слабее всего конкуренция в отрасли «${worst.name}».` : ''));
 
